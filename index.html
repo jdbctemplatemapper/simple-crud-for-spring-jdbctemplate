@@ -1,1 +1,683 @@
-test
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JdbcTemplateMapper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="google-site-verification" content="QjeiEv1L9u47joCGHUfh_p5LJ0kIqvimFLS4kxSVLFw" />
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+
+<meta name="generator" content="Jekyll v3.9.3" />
+<meta property="og:title" content="JdbcTemplateMapper #" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A simple library that makes the usage of Spring JdbcTemplate less verbose" />
+<meta property="og:description" content="A simple library that makes the usage of Spring JdbcTemplate less verbose" />
+<meta property="og:url" content="https://jdbctemplatemapper.github.io/jdbctemplatemapper/" />
+<meta property="og:site_name" content="jdbctemplatemapper" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="JdbcTemplateMapper #" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"A simple library to make the usage of Spring JdbcTemplate less verbose","headline":"JdbcTemplateMapper #","name":"jdbctemplatemapper","url":"https://jdbctemplatemapper.github.io/jdbctemplatemapper/"}</script>
+<!-- End Jekyll SEO tag -->
+    <link type="text/css" rel="stylesheet" href="assets/css/bootstrap.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/css/bootstrap-responsive.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/css/pilcrow.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/css/hljs-github.min.css"/>
+    <link type="text/css" rel="stylesheet" href="assets/css/style.css"/>
+    <style>
+    body {
+      background: url('assets/img/textured_paper.png') repeat top left;
+      background-color: #f6f6f6;
+    }
+    </style>
+  </head>
+<body>
+
+  <div class="container-fluid">
+    <div class="row-fluid">
+      <div class="span3"><ul class="nav nav-list">
+    <li class="sidebar-header-1"><a href="#jdbctemplatemapper">JdbcTemplateMapper</a></li>
+    <li class="sidebar-header-2"><a href="#features">Features</a></li>
+    <li class="sidebar-header-2"><a href="#example-code">Example code</a></li>
+    <li class="sidebar-header-2"><a href="#maven-coordinates">Maven coordinates</a></li>
+    <li class="sidebar-header-2"><a href="#spring-bean-configuration-for-jdbctemplatemapper">Spring bean configuration for JdbcTemplateMapper</a></li>
+    <li class="sidebar-header-2"><a href="#annotations">Annotations</a></li>
+    <li class="sidebar-header-2"><a href="#configuration-for-auto-assigning-createdby-and-updateby">Configuration for auto assigning @CreatedBy and @UpdateBy</a></li>
+    <li class="sidebar-header-2"><a href="#querying-relationships">Querying relationships</a></li>
+    <li class="sidebar-header-3"><a href="#fluent-style-queries">Fluent style queries</a></li>
+    <li class="sidebar-header-3"><a href="#merging-query-results-with-querymerge">Merging query results with QueryMerge</a></li>
+    <li class="sidebar-header-3"><a href="#example-using-query-and-querymerge-together">Example using Query and QueryMerge together</a></li>
+    <li class="sidebar-header-3"><a href="#hasmany-through-(many-to-many)">hasMany through (many to many)</a></li>
+    <li class="sidebar-header-3"><a href="#paginated-queries">Paginated queries</a></li>
+    <li class="sidebar-header-4"><a href="#limitoffsetclause">limitOffsetClause</a></li>
+    <li class="sidebar-header-4"><a href="#querycount">QueryCount</a></li>
+    <li class="sidebar-header-3"><a href="#querying-multiple-relationships-with-a-single-query">Querying multiple relationships with a single query</a></li>
+    <li class="sidebar-header-2"><a href="#accessing-jdbctemplate">Accessing JdbcTemplate</a></li>
+    <li class="sidebar-header-2"><a href="#logging">Logging</a></li>
+    <li class="sidebar-header-2"><a href="#notes">Notes</a></li>
+    <li class="sidebar-header-2"><a href="#troubleshooting">TroubleShooting</a></li>
+    <li class="sidebar-header-2"><a href="#discussionsbugs">Discussions/bugs</a></li>
+</ul>
+      </div>
+      <div class="span9 main"><h1 id="jdbctemplatemapper"><a class="header-link" href="#jdbctemplatemapper"></a>JdbcTemplateMapper</h1>
+<p>A simple library that makes the usage of Spring JdbcTemplate less verbose for CRUD and relationship queries.
+Use it where appropriate and for other features keep using JdbcTemplate as you normally would.</p>
+<p>Note that this is not an ORM. It&#39;s a wrapper around JdbcTemplate so there are no sessions, flushing, level 1 and 2 caches, detached objects, magical inserts/updates/deletes, N+1 queries, unproxy and other challenges of an ORM.</p>
+<p> <a href="https://github.com/jdbctemplatemapper/jdbctemplatemapper">Github project</a> | <a href="https://jdbctemplatemapper.github.io/jdbctemplatemapper/javadoc.html">Javadoc</a></p>
+<h2 id="features"><a class="header-link" href="#features"></a>Features</h2>
+<ol class="list">
+<li>One liners for CRUD.</li>
+<li>Fluent style queries for hasOne, hasMany, hasMany through (many to many) and other ways to query relationships.</li>
+<li>Auto assign properties for models:<ul class="list">
+<li>auto assign created on, updated on.</li>
+<li>auto assign created by, updated by using an implementation of interface IRecordOperatorResolver.</li>
+<li>optimistic locking feature for updates.</li>
+</ul>
+</li>
+<li>For transaction management use Spring transactions since the library uses JdbcTemplate for database access.</li>
+<li>To log the SQL statements use the same logging configurations as JdbcTemplate. See the logging section.</li>
+<li>Tested against PostgreSQL, MySQL, Oracle, SQLServer (Unit tests are run against these databases). Should work with other relational databases.</li>
+<li>Distribution is compiled with java8. Works with java8, java11, java17 </li>
+</ol>
+<h2 id="example-code"><a class="header-link" href="#example-code"></a>Example code</h2>
+<pre class="hljs"><code> <span class="hljs-comment">//@Table annotation is required</span>
+ <span class="hljs-meta">@Table(name=&quot;product&quot;)</span>
+ <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Product</span> </span>{
+   <span class="hljs-comment">// @Id annotation is required.</span>
+   <span class="hljs-comment">// For auto increment database id use @Id(type=IdType.AUTO_INCREMENT). id value will be set on insert</span>
+   <span class="hljs-comment">// For non auto increment id use @Id. In this case the id value will have to be manually set </span>
+   <span class="hljs-comment">// before invoking insert(). Non auto increment id type can be something other than a Number.</span>
+ 
+   <span class="hljs-meta">@Id(type=IdType.AUTO_INCREMENT)</span>
+   <span class="hljs-keyword">private</span> Integer id; 
+           
+   <span class="hljs-meta">@Column(name=&quot;product_name&quot;)</span>            <span class="hljs-comment">// Please read documentation of this annotation.</span>
+   <span class="hljs-keyword">private</span> String name;                    <span class="hljs-comment">// will map to product_name column in table.</span>
+   
+   <span class="hljs-meta">@Column</span>
+   <span class="hljs-keyword">private</span> LocalDateTime availableDate;    <span class="hljs-comment">// will map to column available_date by default </span>
+   
+   <span class="hljs-meta">@Column</span>
+   <span class="hljs-keyword">private</span> Double price;                   <span class="hljs-comment">// will map to price column by default</span>
+   
+   <span class="hljs-keyword">private</span> String someNonDatabaseProperty; <span class="hljs-comment">// No annotations so excluded from inserts/updates/queries</span>
+ 
+   ...
+ }
+ 
+ Product product = <span class="hljs-keyword">new</span> Product();
+ product.setName(<span class="hljs-string1">&quot;some product name&quot;</span>);
+ product.setPrice(<span class="hljs-number">10.25</span>);
+ product.setAvailableDate(LocalDateTime.now());
+ 
+ jdbcTemplateMapper.insert(product); <span class="hljs-comment">// because id type is auto increment, id value will be set on insert.</span>
+
+ product = jdbcTemplateMapper.findById(Product.class, product.getId());
+ product.setPrice(<span class="hljs-number">11.50</span>);
+ jdbcTemplateMapper.update(product);
+ 
+ <span class="hljs-comment">// updateProperties() updates only the specified properties passed as arguments.</span>
+ product.setPrice(<span class="hljs-number">12.50</span>);
+ jdbcTemplateMapper.updateProperties(product, <span class="hljs-string1">&quot;price&quot;</span>); <span class="hljs-comment">// will issue an SQL update only for price.</span>
+ 
+ List&lt;Product&gt; products = jdbcTemplateMapper.findAll(Product.class);
+ 
+ jdbcTemplateMapper.delete(product);
+ 
+ jdbcTemplateMapper.delete(Product.class, <span class="hljs-number">5</span>); <span class="hljs-comment">// delete using id</span>
+ </code></pre><p> See <a href="#querying-relationships">Querying Relationships</a> for query features of the library.</p>
+<h2 id="maven-coordinates"><a class="header-link" href="#maven-coordinates"></a>Maven coordinates</h2>
+<pre class="hljs"><code> <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">groupId</span>&gt;</span>io.github.jdbctemplatemapper<span class="hljs-tag">&lt;/<span class="hljs-name">groupId</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">artifactId</span>&gt;</span>jdbctemplatemapper<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId</span>&gt;</span>
+   <span class="hljs-tag">&lt;<span class="hljs-name">version</span>&gt;</span>3.0.0<span class="hljs-tag">&lt;/<span class="hljs-name">version</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span></code></pre><h2 id="spring-bean-configuration-for-jdbctemplatemapper"><a class="header-link" href="#spring-bean-configuration-for-jdbctemplatemapper"></a>Spring bean configuration for JdbcTemplateMapper</h2>
+<p>JdbcTemplateMapper should be prepared in a Spring application context and given to services as a bean reference. It caches table meta-data etc.</p>
+<p><strong>Note: An instance of JdbcTemplateMapper is thread safe</strong></p>
+<p>See an example of JdbcTemplateMapper configuration used in an application <a href="https://github.com/jdbctemplatemapper/using-spring-jdbctemplate-with-jdbctemplatemapper/blob/master/src/test/java/io/github/ajoseph88/jdbctemplatemapper/config/JdbcTemplateMapperConfig.java">here</a>.</p>
+<p>Depending on the versions of the database/driver, changes may be required for the properties.</p>
+<p><strong>PostgreSQL</strong></p>
+<pre class="hljs"><code># application.properties
+spring.datasource.jdbc-url=jdbc:postgresql:<span class="hljs-comment">//HOST:PORT/THE_DATABASE_NAME</span>
+spring.datasource.username=username
+spring.datasource.password=password
+spring.datasource.driver-<span class="hljs-class"><span class="hljs-keyword">class</span>-<span class="hljs-title">name</span>=<span class="hljs-title">org</span>.<span class="hljs-title">postgresql</span>.<span class="hljs-title">Driver</span></span>
+
+  <span class="hljs-comment">// DataSource properties are read from application.properties.</span>
+  <span class="hljs-meta">@Bean</span>
+  <span class="hljs-meta">@ConfigurationProperties(prefix = <span class="hljs-meta-string">&quot;spring.datasource&quot;</span>)</span>
+  <span class="hljs-keyword">public</span> DataSource sqlDataSource() {
+    <span class="hljs-keyword">return</span> DataSourceBuilder.create().build();
+  }
+
+ <span class="hljs-comment">// Once Spring identifies that a DataSource bean is configured, it automatically configures a default JdbcTemplate</span>
+ <span class="hljs-comment">// bean using the DataSource. Use the JdbcTemplate bean to configure JdbcTemplateMapper.</span>
+ <span class="hljs-meta">@Bean</span>
+  <span class="hljs-keyword">public</span> JdbcTemplateMapper jdbcTemplateMapper(JdbcTemplate jdbcTemplate) {
+    <span class="hljs-keyword">return</span> new JdbcTemplateMapper(jdbcTemplate, THE_SCHEMA_NAME);
+  }
+  </code></pre><p><strong>MySQL</strong></p>
+<pre class="hljs"><code># application.properties
+spring.datasource.jdbc-url=jdbc:mysql://HOST:PORT/THE_DATABASE_NAME
+spring.datasource.username=username
+spring.datasource.<span class="hljs-keyword">password</span>=<span class="hljs-keyword">password</span>
+spring.datasource.driver-<span class="hljs-keyword">class</span>-<span class="hljs-type">name</span>=com.mysql.cj.jdbc.Driver
+
+  // DataSource properties are <span class="hljs-keyword">read</span> <span class="hljs-keyword">from</span> application.properties.
+  @Bean
+  @ConfigurationProperties(prefix = &quot;spring.datasource&quot;)
+  <span class="hljs-built_in">public</span> DataSource sqlDataSource() {
+    <span class="hljs-keyword">return</span> DataSourceBuilder.<span class="hljs-keyword">create</span>().build();
+  }
+
+ @Bean
+  <span class="hljs-built_in">public</span> JdbcTemplateMapper jdbcTemplateMapper(JdbcTemplate jdbcTemplate) {
+    <span class="hljs-keyword">return</span> <span class="hljs-built_in">new</span> JdbcTemplateMapper(jdbcTemplate, <span class="hljs-keyword">null</span>, THE_DATABASE_NAME); // catalog <span class="hljs-type">name</span> <span class="hljs-keyword">is</span> synonymous <span class="hljs-keyword">to</span> <span class="hljs-keyword">database</span> <span class="hljs-type">name</span> <span class="hljs-keyword">for</span> mysql
+  }
+</code></pre><p><strong>Oracle</strong></p>
+<pre class="hljs"><code># application.properties
+spring.datasource.jdbc-url=jdbc:oracle:thin:@HOST:PORT/THE_SERVICE_NAME
+spring.datasource.username=username
+spring.datasource.password=password
+spring.datasource.driver-<span class="hljs-keyword">class</span>-name=oracle.jdbc.driver.OracleDriver
+
+  <span class="hljs-comment">// DataSource properties are read from application.properties.</span>
+  @Bean
+  @<span class="hljs-constructor">ConfigurationProperties(<span class="hljs-params">prefix</span> = <span class="hljs-string1">&quot;spring.datasource&quot;</span>)</span>
+  public DataSource sql<span class="hljs-constructor">DataSource()</span> {
+    return <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">DataSourceBuilder</span>.</span></span>create<span class="hljs-literal">()</span>.build<span class="hljs-literal">()</span>;
+  }
+  
+ <span class="hljs-comment">// Once Spring identifies that a DataSource bean is configured, it automatically configures a default JdbcTemplate</span>
+ <span class="hljs-comment">// bean using the DataSource. Use the JdbcTemplate bean to configure JdbcTemplateMapper.</span>
+ @Bean
+  public JdbcTemplateMapper jdbc<span class="hljs-constructor">TemplateMapper(JdbcTemplate <span class="hljs-params">jdbcTemplate</span>)</span> {   
+    JdbcTemplateMapper jdbcTemplateMapper = <span class="hljs-keyword">new</span> <span class="hljs-constructor">JdbcTemplateMapper(<span class="hljs-params">jdbcTemplate</span>, THE_SCHEMA_NAME)</span>;
+     <span class="hljs-comment">// This is oracle specific only. Need this for oracle to handle table synonyms </span>
+    jdbcTemplateMapper.<span class="hljs-keyword">include</span><span class="hljs-constructor">SynonymsForTableColumnMetaData()</span>;
+    return jdbcTemplateMapper;
+  }
+</code></pre><p><strong>SQLServer</strong></p>
+<pre class="hljs"><code># application.properties
+spring.datasource.jdbc-url=jdbc:sqlserver:<span class="hljs-comment">//HOST:PORT;databaseName=THE_DATABASE_NAME;encrypt=true;trustServerCertificate=true;</span>
+spring.datasource.username=username
+spring.datasource.password=password
+spring.datasource.driver-<span class="hljs-class"><span class="hljs-keyword">class</span>-<span class="hljs-title">name</span>=<span class="hljs-title">com</span>.<span class="hljs-title">microsoft</span>.<span class="hljs-title">sqlserver</span>.<span class="hljs-title">jdbc</span>.<span class="hljs-title">SQLServerDriver</span></span>
+
+  <span class="hljs-comment">// DataSource properties are read from application.properties.</span>
+  <span class="hljs-meta">@Bean</span>
+  <span class="hljs-meta">@ConfigurationProperties(prefix = <span class="hljs-meta-string">&quot;spring.datasource&quot;</span>)</span>
+  <span class="hljs-keyword">public</span> DataSource sqlDataSource() {
+    <span class="hljs-keyword">return</span> DataSourceBuilder.create().build();
+  }
+  
+ <span class="hljs-comment">// Once Spring identifies that a DataSource bean is configured, it automatically configures a default JdbcTemplate</span>
+ <span class="hljs-comment">// bean using the DataSource. Use the JdbcTemplate bean to configure JdbcTemplateMapper.</span>
+ <span class="hljs-meta">@Bean</span>
+  <span class="hljs-keyword">public</span> JdbcTemplateMapper jdbcTemplateMapper(JdbcTemplate jdbcTemplate) {
+    <span class="hljs-keyword">return</span> new JdbcTemplateMapper(jdbcTemplate, THE_SCHEMA_NAME);
+  }
+  </code></pre><h2 id="annotations"><a class="header-link" href="#annotations"></a>Annotations</h2>
+<p><strong>@Table</strong></p>
+<p>Required class level annotation. Examples below:</p>
+<pre class="hljs"><code><span class="hljs-meta">@Table(name=&quot;product&quot;)</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Product</span> </span>{
+  ...
+}
+
+<span class="hljs-meta">@Table(name=&quot;product&quot;, schema=&quot;someSchemaName&quot;)</span> 
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Product</span> </span>{
+  ...
+}
+
+<span class="hljs-meta">@Table(name=&quot;product&quot;, catalog=&quot;someDatabaseName&quot;)</span>  <span class="hljs-comment">// for mysql database name is synonymous with catalog name</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Product</span> </span>{
+  ...
+}
+</code></pre><p><strong>@Id</strong></p>
+<p>There are 2 forms of usage for this.</p>
+<ul class="list">
+<li><strong>auto incremented id usage</strong></li>
+</ul>
+<pre class="hljs"><code><span class="hljs-meta">@Table(name=&quot;product&quot;)</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Product</span> </span>{
+ <span class="hljs-meta">@Id(type=IdType.AUTO_INCREMENT)</span>
+ <span class="hljs-keyword">private</span> Integer productId;
+  ...
+}
+</code></pre><p>After a successful insert() operation the productId property will be populated with the new id.</p>
+<ul class="list">
+<li><strong>NON auto incremented id usage</strong></li>
+</ul>
+<pre class="hljs"><code><span class="hljs-meta">@Table(name=&quot;customer&quot;)</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Customer</span> </span>{
+ <span class="hljs-meta">@Id</span>
+ <span class="hljs-keyword">private</span> Integer id;
+  ...
+}</code></pre><p>In this case you will have to manually set the id value before invoking insert()<br>Since this is NOT an auto increment id, it does not need to be a Number. It can for example be a String.</p>
+<p><strong>@Column</strong></p>
+<p>Properties that need be persisted to the database will need @Column annotation unless the property is already annotated with one of the other annotations (@Id, @Version, @CreatedOn @CreatedBy @UpdatedOn @UpdatedBy). @Column can be used with the other annotations to map to a different column name.</p>
+<p>The two ways to use it:</p>
+<p>@Column<br>This will map property to a column using the default naming convention of camel case to underscore name.</p>
+<p>@Column(name=&quot;some_column_name&quot;)<br>This will map the property to the column specified by name attribute.<br>Note that this will impact using &quot;SELECT * &quot; with Spring BeanPropertyRowMapper in custom queries. The mismatch of column and property names will cause BeanPropertyRowMapper to ignore these properties. Use &quot;SELECT &quot; + jdbcTemplateMapper.getBeanColumnsSql(someClass) which will create column aliases to match property names so will work with BeanPropertyRowMapper.</p>
+<p><strong>@Version</strong></p>
+<p>This annotation is used for optimistic locking. It has to be of type Integer.
+Will be set to 1 when record is created and will incremented on updates. On updates if the version is stale an OptimisticLockingException will be thrown.  @Column annotation can be used with this to map to a different column name.</p>
+<p><strong>@CreatedOn</strong></p>
+<p>When record is created the property will be set. It has to be of type LocalDateTime. @Column annotation can be used with this to map to a different column name.</p>
+<p><strong>@UpdatedOn</strong></p>
+<p>On updates  the property will be set. It has to be of type LocalDateTime. @Column annotation can be used with this to map to a different column name.</p>
+<p><strong>@CreatedBy</strong></p>
+<p>If IRecordOperatorResolver is implemented and configured with JdbcTemplateMapper the value will be set to value returned by implementation when the record is created. Without configuration no values will be set. The type returned should match the type of the property. @Column annotation can be used with this to map to a different column name.</p>
+<p><strong>@UpdatedBy</strong></p>
+<p>If IRecordOperatorResolver is implemented and configured with JdbcTemplateMapper the value will be set to value returned by implementation when the record is updated. Without configuration no values will be set. The type returned should match the type of the property. @Column annotation can be used with this to map to a different column name.</p>
+<p> Annotation examples:</p>
+<pre class="hljs"><code><span class="hljs-meta">@Table(name=&quot;product&quot;)</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Product</span> </span>{
+
+ <span class="hljs-meta">@Id(type=IdType.AUTO_INCREMENT)</span>
+ <span class="hljs-keyword">private</span> Integer productId; 
+ 
+ <span class="hljs-meta">@Column(name=&quot;product_name&quot;)</span>
+ <span class="hljs-keyword">private</span> String name;              <span class="hljs-comment">// maps to product_name column</span>
+ 
+ <span class="hljs-meta">@Column</span>
+ <span class="hljs-keyword">private</span> String productDescription <span class="hljs-comment">// defaults to column product_description </span>
+ 
+ <span class="hljs-meta">@CreatedOn</span> 
+ <span class="hljs-keyword">private</span> LocalDateTime createdTimestamp;  <span class="hljs-comment">// defaults to column created_timestamp. Property type should be LocalDateTime </span>
+  
+ <span class="hljs-meta">@CreatedBy</span>
+ <span class="hljs-keyword">private</span> String createdByUser;     <span class="hljs-comment">// defaults to column created_by_user. </span>
+                                   <span class="hljs-comment">// Property type should match return value of implementation of IRecordOperatorResolver.  </span>
+  
+ <span class="hljs-meta">@UpdatedOn</span>
+ <span class="hljs-keyword">private</span> LocalDateTime updatedAt;  <span class="hljs-comment">// defaults to column updated_at. Property type should be LocalDateTime  </span>
+ 
+ <span class="hljs-meta">@Column(name=&quot;last_update_user&quot;)</span>
+ <span class="hljs-meta">@UpdatedBy</span>
+ <span class="hljs-keyword">private</span> String updatedBy;         <span class="hljs-comment">// maps to column last_update_user. </span>
+                                   <span class="hljs-comment">// Property type should match return value of implementation of IRecordOperatorResolver.</span>
+   
+ <span class="hljs-meta">@Version</span>
+ <span class="hljs-keyword">private</span> Integer version;          <span class="hljs-comment">// defaults to column version, </span>
+                                   <span class="hljs-comment">// Property type should be Integer. Used for optimistic locking</span>
+  
+}</code></pre><h2 id="configuration-for-auto-assigning-createdby-and-updateby"><a class="header-link" href="#configuration-for-auto-assigning-createdby-and-updateby"></a>Configuration for auto assigning @CreatedBy and @UpdateBy</h2>
+<pre class="hljs"><code><span class="hljs-meta">@Bean</span>
+<span class="hljs-function"><span class="hljs-keyword">public</span> JdbcTemplateMapper <span class="hljs-title">jdbcTemplateMapper</span><span class="hljs-params">(JdbcTemplate jdbcTemplate)</span> </span>{
+    JdbcTemplateMapper jdbcTemplateMapper = <span class="hljs-keyword">new</span> JdbcTemplateMapper(jdbcTemplate);
+    <span class="hljs-keyword">return</span> jdbcTemplateMapper
+        .withRecordOperatorResolver(<span class="hljs-keyword">new</span> YourImplementationOfIRecordOperatorResolver());
+}</code></pre><h2 id="querying-relationships"><a class="header-link" href="#querying-relationships"></a>Querying relationships</h2>
+<p>The library provides multiple ways to query relationships.
+Fluent style queries allow querying of hasOne, hasMany and hasMany through (many to many using an associated table) relationships.
+The query where  and order by clauses are just SQL.
+The IDE will provide suggestions to help chain the methods. Turn logging on (see logging section) to see the generated queries.<br>The QueryMerge class allows the results of a previous query to be merged with results of a new query. This comes in handy where multiple relationships need to be queried.</p>
+<h3 id="fluent-style-queries"><a class="header-link" href="#fluent-style-queries"></a>Fluent style queries</h3>
+<pre class="hljs"><code>// Gets <span class="hljs-keyword">all</span> orders. This <span class="hljs-keyword">is</span> equivalent <span class="hljs-keyword">to</span> jdbcTemplateMapper.findAll(<span class="hljs-keyword">Order</span>.<span class="hljs-keyword">class</span>);
+List&lt;<span class="hljs-keyword">Order</span>&gt; orders = Query.<span class="hljs-keyword">type</span>(<span class="hljs-keyword">Order</span>.<span class="hljs-keyword">class</span>)
+                          .<span class="hljs-keyword">execute</span>(jdbcTemplateMapper); //<span class="hljs-keyword">execute</span> <span class="hljs-keyword">with</span> jdbcTemplateMapper
+                          
+// <span class="hljs-keyword">with</span> <span class="hljs-keyword">where</span> <span class="hljs-keyword">and</span> orderBy
+List&lt;<span class="hljs-keyword">Order</span>&gt; orders = 
+  Query.<span class="hljs-keyword">type</span>(<span class="hljs-keyword">Order</span>.<span class="hljs-keyword">class</span>)
+       .<span class="hljs-keyword">where</span>(&quot;orders.status = ? and orders.customer_id = ?&quot;, &quot;COMPLETE&quot;, <span class="hljs-number">1</span>) // good practice <span class="hljs-keyword">to</span> parameterize the <span class="hljs-keyword">where</span> clause
+       .orderBy(&quot;orders.id desc&quot;)
+       .<span class="hljs-keyword">execute</span>(jdbcTemplateMapper);
+       
+// <span class="hljs-keyword">with</span> <span class="hljs-keyword">where</span> <span class="hljs-keyword">and</span> orderBy <span class="hljs-keyword">with</span> named parameters
+List&lt;<span class="hljs-keyword">Order</span>&gt; orders = 
+  Query.<span class="hljs-keyword">type</span>(<span class="hljs-keyword">Order</span>.<span class="hljs-keyword">class</span>)
+       .<span class="hljs-keyword">where</span>(&quot;orders.status = :status and orders.customer_id = :customerId&quot;, 
+                                       <span class="hljs-built_in">new</span> MapSqlParameterSource().addValue(&quot;status&quot;, &quot;COMPLETE&quot;).addValue(&quot;customerId&quot;, <span class="hljs-number">1</span>))
+       .orderBy(&quot;orders.id desc&quot;)
+       .<span class="hljs-keyword">execute</span>(jdbcTemplateMapper);      
+       
+
+// hasOne relationship         
+List&lt;<span class="hljs-keyword">Order</span>&gt; orders = 
+  Query.<span class="hljs-keyword">type</span>(<span class="hljs-keyword">Order</span>.<span class="hljs-keyword">class</span>) // <span class="hljs-keyword">type</span> <span class="hljs-keyword">class</span>
+       .hasOne(Customer.<span class="hljs-keyword">class</span>) // related <span class="hljs-keyword">Class</span>
+       .joinColumnTypeSide(&quot;customer_id&quot;) // hasOne() <span class="hljs-keyword">join</span> <span class="hljs-keyword">column</span> <span class="hljs-keyword">is</span> <span class="hljs-keyword">on</span> <span class="hljs-keyword">type</span> (<span class="hljs-keyword">Order</span>) side <span class="hljs-keyword">table</span>. <span class="hljs-keyword">No</span> <span class="hljs-keyword">table</span> prefixes.
+       .populateProperty(&quot;customer&quot;) // property <span class="hljs-keyword">on</span> <span class="hljs-keyword">type</span> <span class="hljs-keyword">class</span> <span class="hljs-keyword">to</span> populate. The properties <span class="hljs-keyword">class</span> should match related <span class="hljs-keyword">class</span>
+       .<span class="hljs-keyword">where</span>(&quot;orders.status = ?&quot;, &quot;COMPLETE&quot;) 
+       .orderBy(&quot;orders.id DESC, customer.id&quot;)  // <span class="hljs-keyword">type</span> <span class="hljs-keyword">and</span> related <span class="hljs-keyword">table</span> <span class="hljs-keyword">columns</span> can be used
+       .<span class="hljs-keyword">execute</span>(jdbcTemplateMapper);
+              
+// hasMany relationship         
+List&lt;<span class="hljs-keyword">Order</span>&gt; orders = 
+  Query.<span class="hljs-keyword">type</span>(<span class="hljs-keyword">Order</span>.<span class="hljs-keyword">class</span>) 
+       .hasMany(OrderLine.<span class="hljs-keyword">class</span>) // related <span class="hljs-keyword">class</span>
+       .joinColumnManySide(&quot;order_id&quot;) // hasMany() <span class="hljs-keyword">join</span> <span class="hljs-keyword">column</span> <span class="hljs-keyword">is</span> <span class="hljs-keyword">on</span> the many side <span class="hljs-keyword">table</span>. <span class="hljs-keyword">No</span> <span class="hljs-keyword">table</span> prefixes
+       .populateProperty(&quot;orderLines&quot;) // has <span class="hljs-keyword">to</span> be an initialized collection <span class="hljs-keyword">and</span> its generic <span class="hljs-keyword">class</span> should match related <span class="hljs-keyword">class</span>
+       .<span class="hljs-keyword">where</span>(&quot;orders.status = ?&quot;, &quot;COMPLETE&quot;)
+       .orderBy(&quot;orders.id, order_line.id&quot;)
+       .<span class="hljs-keyword">execute</span>(jdbcTemplateMapper); // <span class="hljs-keyword">execute</span> <span class="hljs-keyword">with</span> jdbcTemplateMapper   
+       
+ // employees hasMany skills through associated <span class="hljs-keyword">table</span> <span class="hljs-string1">&#x27;employee_skill&#x27;</span> (many <span class="hljs-keyword">to</span> many)
+ List&lt;Employee&gt; employees =  
+   Query.<span class="hljs-keyword">type</span>(Employee.<span class="hljs-keyword">class</span>) // <span class="hljs-keyword">type</span> <span class="hljs-keyword">class</span>
+        .hasMany(Skill.<span class="hljs-keyword">class</span>) // related <span class="hljs-keyword">class</span>
+        .throughJoinTable(&quot;employee_skill&quot;) // the associated <span class="hljs-keyword">table</span>
+        .throughJoinColumns(&quot;employee_id&quot;, &quot;skill_id&quot;)  // note <span class="hljs-keyword">order</span> <span class="hljs-keyword">of</span> <span class="hljs-keyword">join</span> <span class="hljs-keyword">columns</span>. <span class="hljs-keyword">type</span> <span class="hljs-keyword">join</span> <span class="hljs-keyword">column</span> <span class="hljs-keyword">is</span> first
+        .populateProperty(&quot;skills&quot;) 
+        .<span class="hljs-keyword">execute</span>(jdbcTemplateMapper);                  
+         </code></pre><h3 id="merging-query-results-with-querymerge"><a class="header-link" href="#merging-query-results-with-querymerge"></a>Merging query results with QueryMerge</h3>
+<p>The Query api allows one relationship to be queried at a time. If multiple relationships need to be queried, using QueryMerge is an option. It merges the results of a query with results from another query. 
+QueryMerge uses an sql &#39;IN&#39; clause to retrieve records. If the number of records are larger than 100, multiple IN clause queries will be issued with each having up to 100 entries to retrieve all the records.</p>
+<h3 id="example-using-query-and-querymerge-together"><a class="header-link" href="#example-using-query-and-querymerge-together"></a>Example using Query and QueryMerge together</h3>
+<p>Relationship:  Order hasOne Customer, Order hasMany OrderLine, OrderLine hasOne Product</p>
+<pre class="hljs"><code>
+ <span class="hljs-meta">@Table(name = &quot;orders&quot;)</span>
+  <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Order</span> </span>{
+    <span class="hljs-meta">@Id(type = IdType.AUTO_INCREMENT)</span>
+    <span class="hljs-keyword">private</span> Integer id;                             <span class="hljs-comment">// column id    </span>
+    <span class="hljs-meta">@Column</span>
+    <span class="hljs-keyword">private</span> LocalDateTime orderDate;                <span class="hljs-comment">// column order_date    </span>
+    <span class="hljs-meta">@Column</span>
+    <span class="hljs-keyword">private</span> String status;                          <span class="hljs-comment">// column status  </span>
+    <span class="hljs-meta">@Column</span>
+    <span class="hljs-keyword">private</span> Integer customerId;                     <span class="hljs-comment">// column customer_id. foreign key</span>
+    
+    <span class="hljs-keyword">private</span> Customer customer;                      <span class="hljs-comment">// There are no mappings for relationships</span>
+    List&lt;OrderLine&gt; orderLines = <span class="hljs-keyword">new</span> ArrayList&lt;&gt;(); <span class="hljs-comment">// There are no mappings for relationships</span>
+                                                    <span class="hljs-comment">// Important: collections have to be initialized</span>
+                                                    <span class="hljs-comment">// so that the queries can populate them.</span>
+  }
+  
+  <span class="hljs-meta">@Table(name=&quot;order_line&quot;)</span>
+  <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">OrderLine</span> </span>{
+    <span class="hljs-meta">@Id(type = IdType.AUTO_INCREMENT)</span>   
+    <span class="hljs-keyword">private</span> Integer id; <span class="hljs-comment">// column id   </span>
+    <span class="hljs-meta">@Column</span>
+    <span class="hljs-keyword">private</span> Integer orderId; <span class="hljs-comment">// column order_id. foreign key   </span>
+    <span class="hljs-meta">@Column</span>
+    <span class="hljs-keyword">private</span> Integer numOfUnits; <span class="hljs-comment">// column num_of_units   </span>
+    <span class="hljs-meta">@Column</span>
+    <span class="hljs-keyword">private</span> Integer productId; <span class="hljs-comment">// column product_id. foreign key</span>
+
+    <span class="hljs-keyword">private</span> Product product; <span class="hljs-comment">// There are no mappings for relationships</span>
+  }
+  
+  <span class="hljs-meta">@Table(name=&quot;product&quot;)</span>
+  <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Product</span> </span>{
+    <span class="hljs-meta">@Id(type = IdType.AUTO_INCREMENT)</span>
+    <span class="hljs-keyword">private</span> Integer id;           <span class="hljs-comment">// column id    </span>
+    <span class="hljs-meta">@Column</span>
+    <span class="hljs-keyword">private</span> String name;          <span class="hljs-comment">// column name    </span>
+    <span class="hljs-meta">@Column</span>
+    <span class="hljs-keyword">private</span> Double price;         <span class="hljs-comment">// column price</span>
+  }
+  
+  <span class="hljs-meta">@Table(name=&quot;customer&quot;)</span>
+  <span class="hljs-keyword">public</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Customer</span> </span>{
+    <span class="hljs-meta">@Id(type = IdType.AUTO_INCREMENT)</span>
+    <span class="hljs-keyword">private</span> Integer id;           <span class="hljs-comment">// column id      </span>
+    <span class="hljs-meta">@Column</span>
+    <span class="hljs-keyword">private</span> String name;          <span class="hljs-comment">// column name</span>
+  }
+  </code></pre><ol class="list">
+<li>Below query will return a list of orders with their &#39;orderLines&#39; populated.</li>
+</ol>
+<pre class="hljs"><code>List&lt;Order&gt; orders = 
+   <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Query</span>.</span></span><span class="hljs-keyword">type</span>(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Order</span>.</span></span><span class="hljs-keyword">class</span>) 
+        .has<span class="hljs-constructor">Many(OrderLine.<span class="hljs-params">class</span>)</span> 
+        .join<span class="hljs-constructor">ColumnManySide(<span class="hljs-string1">&quot;order_id&quot;</span>)</span> 
+        .populate<span class="hljs-constructor">Property(<span class="hljs-string1">&quot;orderLines&quot;</span>)</span> 
+        .where(orders.status = ?, <span class="hljs-string1">&quot;COMPLETE&quot;</span>) 
+        .order<span class="hljs-constructor">By(<span class="hljs-string1">&quot;orders.order_date DESC, order_line.id&quot;</span>)</span> 
+        .execute(jdbcTemplateMapper); 
+</code></pre><ol start="2">
+<li>Populate the Order hasOne Customer relationship for the above orders.
+For this use QueryMerge. It merges the results of the query with the orders list from previous query. QueryMerge issues an &#39;IN&#39; sql clause to get the pertinent customer records for orders and merges the results.</li>
+</ol>
+<pre class="hljs"><code> <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">QueryMerge</span>.</span></span><span class="hljs-keyword">type</span>(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Order</span>.</span></span><span class="hljs-keyword">class</span>)
+           .has<span class="hljs-constructor">One(Customer.<span class="hljs-params">class</span>)</span>
+           .join<span class="hljs-constructor">ColumnTypeSide(<span class="hljs-string1">&quot;customer_id&quot;</span>)</span>
+           .populate<span class="hljs-constructor">Property(<span class="hljs-string1">&quot;customer&quot;</span>)</span>
+           .execute(jdbcTemplateMapper, orders); <span class="hljs-comment">// issues and IN clause to get customer records and merges into orders list</span>
+   </code></pre><p> Now we have Order and its orderLines (1st query) and orders with its Customer (second query merge)   </p>
+<ol start="3">
+<li>Finally we need to populate the product for each OrderLine.
+Each order could have multiple orderLines so it is a list of lists.
+To get all the orderLines as a consolidated list we need to flatten the list of lists.</li>
+</ol>
+<pre class="hljs"><code> List&lt;OrderLine&gt; consolidatedOrderLines = orders.stream<span class="hljs-literal">()</span>
+                                                .map(o -&gt; o.get<span class="hljs-constructor">OrderLines()</span>)
+                                                .flat<span class="hljs-constructor">Map(<span class="hljs-params">list</span> -&gt; <span class="hljs-params">list</span>.<span class="hljs-params">stream</span>()</span>)
+                                                .collect(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Collectors</span>.</span></span><span class="hljs-keyword">to</span><span class="hljs-constructor">List()</span>);
+               
+ <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">QueryMerge</span>.</span></span><span class="hljs-keyword">type</span>(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">OrderLine</span>.</span></span><span class="hljs-keyword">class</span>)
+           .has<span class="hljs-constructor">One(Product.<span class="hljs-params">class</span>)</span>
+           .join<span class="hljs-constructor">ColumnTypeSide(<span class="hljs-string1">&quot;product_id&quot;</span>)</span>
+           .populate<span class="hljs-constructor">Property(<span class="hljs-string1">&quot;product&quot;</span>)</span> 
+           .execute(jdbcTemplateMapper, consolidatedOrderLines); <span class="hljs-comment">// issues an sql &#x27;IN&#x27; clause to get product records and merges</span>
+           </code></pre><h3 id="hasmany-through-many-to-many"><a class="header-link" href="#hasmany-through-many-to-many"></a>hasMany through (many to many)</h3>
+<p>This allows querying of hasMany relationship through an associated table (many to many)</p>
+<pre class="hljs"><code>@<span class="hljs-constructor">Table(<span class="hljs-params">name</span> = <span class="hljs-string1">&quot;employee&quot;</span>)</span>
+public <span class="hljs-keyword">class</span> Employee {
+    @<span class="hljs-constructor">Id(<span class="hljs-params">type</span> = IdType.AUTO_INCREMENT)</span>
+    <span class="hljs-keyword">private</span> Integer id;   
+    @Column
+    <span class="hljs-keyword">private</span> String lastName;
+    @Column
+    <span class="hljs-keyword">private</span> String firstName;
+        
+    <span class="hljs-keyword">private</span> List&lt;Skill&gt; skills = <span class="hljs-keyword">new</span> ArrayList&lt;&gt;<span class="hljs-literal">()</span>;<span class="hljs-operator">
+    ...
+</span>}
+
+@<span class="hljs-constructor">Table(<span class="hljs-params">name</span> = <span class="hljs-string1">&quot;skill&quot;</span>)</span>
+public <span class="hljs-keyword">class</span> Skill {
+    @<span class="hljs-constructor">Id(<span class="hljs-params">type</span> = IdType.AUTO_INCREMENT)</span>
+    <span class="hljs-keyword">private</span> Integer id;
+    @Column
+    <span class="hljs-keyword">private</span> String name;
+    
+    <span class="hljs-keyword">private</span> List&lt;Employee&gt; employees = <span class="hljs-keyword">new</span> ArrayList&lt;&gt;<span class="hljs-literal">()</span>;<span class="hljs-operator">
+    ...
+</span>}    
+
+@<span class="hljs-constructor">Table(<span class="hljs-params">name</span> = <span class="hljs-string1">&quot;employee_skill&quot;</span>)</span>
+public <span class="hljs-keyword">class</span> EmployeeSkill {
+    @<span class="hljs-constructor">Id(<span class="hljs-params">type</span> = IdType.AUTO_INCREMENT)</span>
+    <span class="hljs-keyword">private</span> Integer id;
+    @Column
+    <span class="hljs-keyword">private</span> Integer employeeId;
+    @Column
+    <span class="hljs-keyword">private</span> Integer skillId;<span class="hljs-operator">
+    ...
+ </span>}   
+    
+ <span class="hljs-comment">// employees with skills populated.</span>
+ List&lt;Employee&gt; employees =  
+   <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Query</span>.</span></span><span class="hljs-keyword">type</span>(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Employee</span>.</span></span><span class="hljs-keyword">class</span>) <span class="hljs-comment">//type class</span>
+        .has<span class="hljs-constructor">Many(Skill.<span class="hljs-params">class</span>)</span>
+        .through<span class="hljs-constructor">JoinTable(<span class="hljs-string1">&quot;employee_skill&quot;</span>)</span> <span class="hljs-comment">// the associated table</span>
+        .through<span class="hljs-constructor">JoinColumns(<span class="hljs-string1">&quot;employee_id&quot;</span>, <span class="hljs-string1">&quot;skill_id&quot;</span>)</span> <span class="hljs-comment">// note order of join columns. type join column is first</span>
+        .populate<span class="hljs-constructor">Property(<span class="hljs-string1">&quot;skills&quot;</span>)</span> 
+        .execute(jdbcTemplateMapper);
+ 
+ <span class="hljs-comment">// Skills with employees populated</span>
+ List&lt;Skill&gt; skills = 
+   <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Query</span>.</span></span><span class="hljs-keyword">type</span>(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Skill</span>.</span></span><span class="hljs-keyword">class</span>) <span class="hljs-comment">// type class</span>
+        .has<span class="hljs-constructor">Many(Employee.<span class="hljs-params">class</span>)</span> 
+        .through<span class="hljs-constructor">JoinTable(<span class="hljs-string1">&quot;employee_skill&quot;</span>)</span> <span class="hljs-comment">// the associated table</span>
+        .through<span class="hljs-constructor">JoinColumns(<span class="hljs-string1">&quot;skill_id&quot;</span>, <span class="hljs-string1">&quot;employee_id&quot;</span>)</span> <span class="hljs-comment">// note order of join columns. type join column is first</span>
+        .populate<span class="hljs-constructor">Property(<span class="hljs-string1">&quot;employees&quot;</span>)</span>
+        .execute(jdbcTemplateMapper);
+ </code></pre><h3 id="paginated-queries"><a class="header-link" href="#paginated-queries"></a>Paginated queries</h3>
+<p>Paginated queries are supported with some limitations.</p>
+<h4 id="limitoffsetclause"><a class="header-link" href="#limitoffsetclause"></a>limitOffsetClause</h4>
+<p>limitOffsetClause is supported for non relationship queries and hasOne relationship queries. There is no support for hasMany/hasManythrough relationships.  </p>
+<p>To achieve pagination functionality for hasMany/hasManythrough relationships one option is to issue a query for the main class with the limitOffsetClause and then use QueryMerge to populate the hasMany/hasManythrough side of the relationship. Example below:</p>
+<pre class="hljs"><code> <span class="hljs-comment">// a paginated query for orders. Issuing a hasOne relationship query here. It could have been a non relationship query</span>
+ List&lt;Order&gt; orders = 
+    <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Query</span>.</span></span><span class="hljs-keyword">type</span>(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Order</span>.</span></span><span class="hljs-keyword">class</span>)
+         .has<span class="hljs-constructor">One(Customer.<span class="hljs-params">class</span>)</span>
+         .join<span class="hljs-constructor">ColumnTypeSide(<span class="hljs-string1">&quot;customer_id&quot;</span>)</span> 
+         .populate<span class="hljs-constructor">Property(<span class="hljs-string1">&quot;customer&quot;</span>)</span> 
+         .where(<span class="hljs-string1">&quot;orders.status = ?&quot;</span>, <span class="hljs-string1">&quot;COMPLETE&quot;</span>)
+         .order<span class="hljs-constructor">By(<span class="hljs-string1">&quot;orders.id&quot;</span>)</span> <span class="hljs-comment">// always order paginated queries. Otherwise databases will return random records per query.</span>
+         .limit<span class="hljs-constructor">OffsetClause(<span class="hljs-string1">&quot;OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY&quot;</span>)</span>  <span class="hljs-comment">// postgres syntax. Would be different for other databases.</span>
+         .execute(jdbcTemplateMapper);
+    
+ <span class="hljs-comment">// merge the the orderLines into the orders list from the above paginated query</span>
+ <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">QueryMerge</span>.</span></span><span class="hljs-keyword">type</span>(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Order</span>.</span></span><span class="hljs-keyword">class</span>)
+           .has<span class="hljs-constructor">Many(OrderLine.<span class="hljs-params">class</span>)</span>
+           .join<span class="hljs-constructor">ColumnManySide(<span class="hljs-string1">&quot;order_id&quot;</span>)</span>
+           .populate<span class="hljs-constructor">Property(<span class="hljs-string1">&quot;orderLines&quot;</span>)</span>
+           .order<span class="hljs-constructor">By(<span class="hljs-string1">&quot;order_line.id&quot;</span>)</span> <span class="hljs-comment">// hasMany side can be ordered</span>
+           .execute(jdbcTemplateMapper, orders); <span class="hljs-comment">// issues an sql &#x27;IN&#x27; clause to get OrderLine records and merges results into orders list.</span>
+         </code></pre><h4 id="querycount"><a class="header-link" href="#querycount"></a>QueryCount</h4>
+<p>To get corresponding record counts for paginated queries use the QueryCount class. It has no support hasMany()/hasManythrough relationships.</p>
+<p>Example to get count for the paginated order query above:</p>
+<pre class="hljs"><code> Integer count = <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">QueryCount</span>.</span></span><span class="hljs-keyword">type</span>(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Order</span>.</span></span><span class="hljs-keyword">class</span>)
+                           .has<span class="hljs-constructor">One(Customer.<span class="hljs-params">class</span>)</span>
+                           .join<span class="hljs-constructor">ColumnTypeSide(<span class="hljs-string1">&quot;customer_id&quot;</span>)</span> 
+                           .where(<span class="hljs-string1">&quot;orders.status = ?&quot;</span>, <span class="hljs-string1">&quot;COMPLETE&quot;</span>)
+                           .execute(jdbcTemplateMapper);
+                       </code></pre><p>Note that the following methods are missing in QueryCount when compared to its corresponding paginated Query:</p>
+<p>populateProperty() - Not needed since we are just getting a count.<br>orderBy()          - Not needed because orderBy does not change the count of records returned.<br>limitOffsetClause  - Not needed since we want the total count not a subset.  </p>
+<h3 id="querying-multiple-relationships-with-a-single-query"><a class="header-link" href="#querying-multiple-relationships-with-a-single-query"></a>Querying multiple relationships with a single query</h3>
+<p>To query multiple relationships with a single query use SelectMapper with Spring ResultSetExtractor.<br>SelectMapper allows generating the select columns string for the models and population of the models from a ResultSet. </p>
+<p>An example for querying the following relationship: Order hasOne Customer, Order hasMany OrderLine, OrderLine hasOne Product  </p>
+<pre class="hljs"><code> <span class="hljs-comment">// The second argument to getSelectMapper() below is the table alias in the query and should match what is exactly used in query</span>
+ <span class="hljs-comment">// For the query below the &#x27;orders&#x27; table alias is &#x27;o&#x27;, &#x27;customer&#x27; table alias is &#x27;c&#x27;, &#x27;order_line&#x27; table alias </span>
+ <span class="hljs-comment">// is &#x27;ol&#x27; and the product table alias is &#x27;p&#x27;</span>
+ <span class="hljs-comment">// SelectMapper.getColumnsSql() aliases all columns with the prefix: table alias + &quot;_&quot; so that there are no conflicts in sql</span>
+ <span class="hljs-comment">// when different models have same property names like for example &#x27;id&#x27;.</span>
+ <span class="hljs-comment">// SelectMapper.buildModel(rs) uses the column alias prefix to populate the pertinent model from the ResultSet.</span>
+ 
+ SelectMapper&lt;<span class="hljs-keyword">Order</span>&gt; orderSelectMapper = jdbcTemplateMapper.getSelectMapper(<span class="hljs-keyword">Order</span>.<span class="hljs-keyword">class</span>, <span class="hljs-string1">&quot;o&quot;</span>);
+ SelectMapper&lt;Customer&gt; customerSelectMapper = jdbcTemplateMapper.getSelectMapper(Customer.<span class="hljs-keyword">class</span>, <span class="hljs-string1">&quot;c&quot;</span>);
+ SelectMapper&lt;OrderLine&gt; orderLineSelectMapper = jdbcTemplateMapper.getSelectMapper(OrderLine.<span class="hljs-keyword">class</span>, <span class="hljs-string1">&quot;ol&quot;</span>);
+ SelectMapper&lt;Product&gt; productSelectMapper = jdbcTemplateMapper.getSelectMapper(Product.<span class="hljs-keyword">class</span>, <span class="hljs-string1">&quot;p&quot;</span>);
+
+ <span class="hljs-comment">// no need to type in column names and aliases so we can concentrate on join and where clauses</span>
+ String sql = <span class="hljs-string1">&quot;select&quot;</span> 
+               + orderSelectMapper.getColumnsSql() 
+               + <span class="hljs-string1">&quot;,&quot;</span>
+               + customerSelectMapper.getColumnsSql() 
+               + <span class="hljs-string1">&quot;,&quot;</span>
+               + orderLineSelectMapper.getColumnsSql() 
+               + <span class="hljs-string1">&quot;,&quot;</span> 
+               + productSelectMapper.getColumnsSql()
+               + <span class="hljs-string1">&quot; from orders o&quot;</span> 
+               + &quot; left join customer c <span class="hljs-keyword">on</span> o.customer_id = c.id
+               + <span class="hljs-string1">&quot; left join order_line ol on o.id = ol.order_id&quot;</span>
+               + <span class="hljs-string1">&quot; left join product p on ol.product_id = p.id&quot;</span>
+               + <span class="hljs-string1">&quot; where o.status = ?&quot;</span>
+               + <span class="hljs-string1">&quot; order by o.id, ol.id&quot;</span>;
+  
+ <span class="hljs-comment">// using Spring ResultSetExtractor                                          </span>
+ ResultSetExtractor&lt;<span class="hljs-keyword">List</span>&lt;<span class="hljs-keyword">Order</span>&gt;&gt; rsExtractor = new ResultSetExtractor&lt;<span class="hljs-keyword">List</span>&lt;<span class="hljs-keyword">Order</span>&gt;&gt;() {
+     @Override
+     public <span class="hljs-keyword">List</span>&lt;<span class="hljs-keyword">Order</span>&gt; extractData(ResultSet rs) throws SQLException, DataAccessException {
+       <span class="hljs-comment">// below logic is specific to this use case. Your logic will be different.</span>
+       <span class="hljs-comment">// The thing to note is that each model gets built by selectMapper.buildModel(rs).</span>
+       
+       <span class="hljs-comment">// using maps below to prevent multiple instantiation of same Order, Customer and Product</span>
+       <span class="hljs-comment">// It is a common pattern when using ResultSetExtractor</span>
+       <span class="hljs-comment">// key - id</span>
+       Map&lt;Object, <span class="hljs-keyword">Order</span>&gt; idOrderMap = new LinkedHashMap&lt;&gt;(); <span class="hljs-comment">// LinkedHashMap to retain result order</span>
+       Map&lt;Object, Customer&gt; idCustomerMap = new HashMap&lt;&gt;();
+       Map&lt;Object, Project&gt; idProductMap = new HashMap&lt;&gt;();
+       
+       <span class="hljs-keyword">while</span> (rs.next()) {        
+         <span class="hljs-comment">// orderSelectMapper.getResultSetModelIdColumnLabel() returns the id column alias </span>
+         <span class="hljs-comment">// which is &#x27;o_id&#x27; for the sql above. </span>
+         Object orderId = rs.getObject(orderSelectMapper.getResultSetModelIdColumnLabel());
+         <span class="hljs-keyword">Order</span> <span class="hljs-keyword">order</span> = idOrderMap.<span class="hljs-built_in">get</span>(orderId);
+         <span class="hljs-keyword">if</span> (<span class="hljs-keyword">order</span> == null) {
+           <span class="hljs-keyword">order</span> = orderSelectMapper.buildModel(rs); 
+           <span class="hljs-comment">/******************************************     
+           // customerSelectMapper.getResultSetModelIdColumnName() returns the id column alias 
+           // which is &#x27;c_id&#x27;for the sql above.
+           Customer customer = null;
+           Object customerId = rs.getObject(customerSelectMapper.getResultSetModelIdColumnLabel());
+           if(customerId != null){
+             customer = idCustomerMap.get(customerId);
+             if (customer == null) {
+               customer = customerSelectMapper.buildModel(rs); 
+               idCustomerMap.put(customerId, customer);
+             }
+           }
+           *******************************************/</span>
+           <span class="hljs-comment">// above code refactored</span>
+           Customer customer = getModel(rs, customerSelectMapper, idCustomerMap); <span class="hljs-comment">// see definition of getModel() further below</span>
+           
+           <span class="hljs-keyword">order</span>.setCustomer(customer);
+           idOrderMap.put(orderId, <span class="hljs-keyword">order</span>);
+         }
+
+         OrderLine orderLine = orderLineSelectMapper.buildModel(rs);
+         <span class="hljs-keyword">if</span>(orderLine != null) {
+           Product product = getModel(rs, productSelectMapper, idProductMap); <span class="hljs-comment">// see definition of getModel() further below</span>
+           orderLine.setProduct(product); 
+           <span class="hljs-keyword">order</span>.getOrderLines().add(orderLine);
+         }            
+      }
+      <span class="hljs-keyword">return</span> new ArrayList&lt;<span class="hljs-keyword">Order</span>&gt;(idOrderMap.values());
+    }
+  };
+ 
+  <span class="hljs-comment">// execute the JdbcTemplate query    </span>
+  <span class="hljs-keyword">List</span>&lt;<span class="hljs-keyword">Order</span>&gt; orders = jdbcTemplateMapper.getJdbcTemplate().<span class="hljs-keyword">query</span>(sql, rsExtractor, <span class="hljs-string1">&quot;COMPLETE&quot;</span>);
+  
+  ...
+  
+  <span class="hljs-comment">// This method is not part of the distribution. Copy it for use in your code.</span>
+  public &lt;<span class="hljs-keyword">U</span>&gt; <span class="hljs-keyword">U</span> getModel(ResultSet rs, SelectMapper&lt;<span class="hljs-keyword">U</span>&gt; selectMapper, Map&lt;Object, <span class="hljs-keyword">U</span>&gt; idToModelMap) throws SQLException {
+    <span class="hljs-keyword">U</span> model = null;
+    Object id = rs.getObject(selectMapper.getResultSetModelIdColumnLabel());
+    <span class="hljs-keyword">if</span> (id != null) {
+      model = idToModelMap.<span class="hljs-built_in">get</span>(id);
+      <span class="hljs-keyword">if</span> (model == null) {
+        model = selectMapper.buildModel(rs); <span class="hljs-comment">// builds the model from resultSet</span>
+        idToModelMap.put(id, model);
+      }
+    }
+    <span class="hljs-keyword">return</span> model;
+  }
+  
+...
+</code></pre><h2 id="accessing-jdbctemplate"><a class="header-link" href="#accessing-jdbctemplate"></a>Accessing JdbcTemplate</h2>
+<pre class="hljs"><code>  <span class="hljs-selector-tag">jdbcTemplateMapper</span><span class="hljs-selector-class">.getJdbcTemplate</span>(); <span class="hljs-comment">// gets you the JdbcTemplate of the JdbcTemplateMapper</span>
+  <span class="hljs-selector-tag">jdbcTemplateMapper</span><span class="hljs-selector-class">.getNamedParameterJdbcTemplate</span>(); <span class="hljs-comment">// gets you the NamedParameterJdbcTemplate of the JdbcTemplateMapper</span></code></pre><h2 id="logging"><a class="header-link" href="#logging"></a>Logging</h2>
+<p>Uses the same logging configurations as Spring&#39;s JdbcTemplate to log the SQL. In application.properties:</p>
+<pre class="hljs"><code><span class="hljs-comment"># log the SQL</span>
+<span class="hljs-attr">logging.level.org.springframework.jdbc.core.JdbcTemplate</span>=TRACE
+
+<span class="hljs-comment"># need this to log the INSERT statements</span>
+<span class="hljs-attr">logging.level.org.springframework.jdbc.core.simple.SimpleJdbcInsert</span>=TRACE
+
+<span class="hljs-comment"># log the parameters of SQL statement</span>
+<span class="hljs-attr">logging.level.org.springframework.jdbc.core.StatementCreatorUtils</span>=TRACE
+</code></pre><h2 id="notes"><a class="header-link" href="#notes"></a>Notes</h2>
+<ol class="list">
+<li>Models should have a no argument constructor so they can be instantiated.</li>
+<li>Database changes will require a restart of the application since JdbcTemplateMapper caches table metadata.</li>
+<li>When using @Column(name=&quot;some_column_name&quot;) to map a property to a non default column, it will impact using &quot;SELECT * &quot; with Spring BeanPropertyRowMapper in custom queries. The mismatch of column and property names will cause Spring BeanPropertyRowMapper to ignore these properties. Use &quot;SELECT &quot; + jdbcTemplateMapper.getBeanColumnsSql(Class) which will create column aliases to match property names so will work with BeanPropertyRowMapper.</li>
+<li>If insert/update fails do not reuse the object since it could be in an inconsistent state.</li>
+<li>For Oracle/SqlServer no support for blob/clob. Use JdbcTemplate directly for this with custom code</li>
+</ol>
+<h2 id="troubleshooting"><a class="header-link" href="#troubleshooting"></a>TroubleShooting</h2>
+<p>Make sure you can connect to your database and issue a simple query using Spring JdbcTemplate without the JdbcTemplateMapper.</p>
+<h2 id="discussionsbugs"><a class="header-link" href="#discussionsbugs"></a>Discussions/bugs</h2>
+<p>Discussions <a href="https://github.com/jdbctemplatemapper/jdbctemplatemapper/discussions">here</a></p>
+<p><a href="https://github.com/jdbctemplatemapper/jdbctemplatemapper/issues">Issues ticket</a>. </p>
+<p>When opening a ticket please provide the following:
+jdbcTemplateMapper version, Database name/version, jdbc driver version, version of java, version of Spring Boot</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script type="text/javascript" src="assets/js/bootstrap.min.js"></script>
+</body>
+</html>
