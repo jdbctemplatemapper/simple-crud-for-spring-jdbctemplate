@@ -54,12 +54,14 @@
     <li class="sidebar-header-3"><a href="#paginated-queries">Paginated queries</a></li>
     <li class="sidebar-header-4"><a href="#limitoffsetclause">limitOffsetClause</a></li>
     <li class="sidebar-header-4"><a href="#querycount">QueryCount</a></li>
+    <li class="sidebar-header-3"><a href="#dynamic-queries">Dynamic Queries</a></li>
     <li class="sidebar-header-3"><a href="#querying-multiple-relationships-with-a-single-query">Querying multiple relationships with a single query</a></li>
     <li class="sidebar-header-2"><a href="#accessing-jdbctemplate">Accessing JdbcTemplate</a></li>
     <li class="sidebar-header-2"><a href="#logging">Logging</a></li>
     <li class="sidebar-header-2"><a href="#notes">Notes</a></li>
     <li class="sidebar-header-2"><a href="#troubleshooting">TroubleShooting</a></li>
     <li class="sidebar-header-2"><a href="#discussionsbugs">Discussions/bugs</a></li>
+    <li class="sidebar-header-2"><a href="#migration-to-3x-from-2x">Migration to 3.x from 2.x</a></li>
 </ul>
       </div>
       <div class="span9 main"><h1 id="jdbctemplatemapper"><a class="header-link" href="#jdbctemplatemapper"></a>JdbcTemplateMapper</h1>
@@ -84,7 +86,7 @@ Use it where appropriate and for other features keep using JdbcTemplate as you n
 <li>For transaction management use Spring transactions since the library uses JdbcTemplate for database access.</li>
 <li>To log the SQL statements use the same logging configurations as JdbcTemplate. See the logging section.</li>
 <li>Tested against PostgreSQL, MySQL, Oracle, SQLServer (Unit tests are run against these databases). Should work with other relational databases.</li>
-<li>Distribution is compiled with java8. Works with java8, java11, java17, java21. </li>
+<li>Distribution is compiled with java8. Works with java8, java11, java17, java21.</li>
 </ol>
 <h2 id="example-code"><a class="header-link" href="#example-code"></a>Example code</h2>
 <pre class="hljs"><code> <span class="hljs-comment">//@Table annotation is required</span>
@@ -132,6 +134,10 @@ Use it where appropriate and for other features keep using JdbcTemplate as you n
  jdbcTemplateMapper.delete(product);
  
  jdbcTemplateMapper.delete(Product.class, <span class="hljs-number">5</span>); <span class="hljs-comment">// delete using id</span>
+ 
+ <span class="hljs-comment">// access JdbcTemplate and use its feature set.</span>
+ JdbcTemplate jdbcTemplate = jtm.getJdbcTemplate();
+ NamedParameterJdbcTemplate namedParameterJdbcTemplate = jtm.getNamedParameterJdbcTemplate();
  </code></pre><p> See <a href="#querying-relationships">Querying Relationships</a> for query features of the library.</p>
 <h2 id="maven-coordinates"><a class="header-link" href="#maven-coordinates"></a>Maven coordinates</h2>
 <pre class="hljs"><code> <span class="hljs-tag">&lt;<span class="hljs-name">dependency</span>&gt;</span>
@@ -141,8 +147,8 @@ Use it where appropriate and for other features keep using JdbcTemplate as you n
 <span class="hljs-tag">&lt;/<span class="hljs-name">dependency</span>&gt;</span></code></pre><h2 id="spring-bean-configuration-for-jdbctemplatemapper"><a class="header-link" href="#spring-bean-configuration-for-jdbctemplatemapper"></a>Spring bean configuration for JdbcTemplateMapper</h2>
 <p>JdbcTemplateMapper should be prepared in a Spring application context and given to services as a bean reference. It caches table meta-data etc.</p>
 <p><strong>Note: An instance of JdbcTemplateMapper is thread safe</strong></p>
-<p>See an example of JdbcTemplateMapper configuration used in an application <a href="https://github.com/jdbctemplatemapper/using-spring-jdbctemplate-with-jdbctemplatemapper/blob/master/src/test/java/io/github/ajoseph88/jdbctemplatemapper/config/JdbcTemplateMapperConfig.java">here</a>.</p>
-<p>Depending on the versions of the database/driver, changes may be required for the properties.</p>
+<p>See an example of JdbcTemplateMapper configuration used in an application <a href="https://github.com/jdbctemplatemapper/simple-crud-for-spring-jdbctemplate/blob/master/src/test/java/io/github/ajoseph88/jdbctemplatemapper/config/JdbcTemplateMapperConfig.java">here</a>.</p>
+<p>Depending on the versions of springboot/database/driver, changes may be required for the properties.</p>
 <p><strong>PostgreSQL</strong></p>
 <pre class="hljs"><code># application.properties
 spring.datasource.jdbc-url=jdbc:postgresql:<span class="hljs-comment">//HOST:PORT/THE_DATABASE_NAME</span>
@@ -226,7 +232,7 @@ spring.datasource.driver-<span class="hljs-class"><span class="hljs-keyword">cla
   }
   </code></pre><h2 id="annotations"><a class="header-link" href="#annotations"></a>Annotations</h2>
 <p><strong>@Table</strong></p>
-<p>Required class level annotation. Examples below:</p>
+<p>Required class level annotation. The table or view should exist in database. Examples below:</p>
 <pre class="hljs"><code><span class="hljs-meta">@Table(name=&quot;product&quot;)</span>
 <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Product</span> </span>{
   ...
@@ -339,7 +345,14 @@ List&lt;<span class="hljs-keyword">Order</span>&gt; orders =
        .<span class="hljs-keyword">where</span>(&quot;orders.status = :status and orders.customer_id = :customerId&quot;, 
                                        <span class="hljs-built_in">new</span> MapSqlParameterSource().addValue(&quot;status&quot;, &quot;COMPLETE&quot;).addValue(&quot;customerId&quot;, <span class="hljs-number">1</span>))
        .orderBy(&quot;orders.id desc&quot;)
-       .<span class="hljs-keyword">execute</span>(jdbcTemplateMapper);      
+       .<span class="hljs-keyword">execute</span>(jdbcTemplateMapper); 
+       
+// <span class="hljs-keyword">with</span> <span class="hljs-keyword">where</span> <span class="hljs-keyword">and</span> orderBy <span class="hljs-keyword">with</span> <span class="hljs-keyword">table</span> <span class="hljs-keyword">alias</span>. Aliases can be used <span class="hljs-keyword">in</span> relationship queries too.
+List&lt;<span class="hljs-keyword">Order</span>&gt; orders = 
+  Query.<span class="hljs-keyword">type</span>(<span class="hljs-keyword">Order</span>.<span class="hljs-keyword">class</span>, &quot;o&quot;)  // &quot;o&quot; <span class="hljs-keyword">is</span> the <span class="hljs-keyword">table</span> <span class="hljs-keyword">alias</span>
+       .<span class="hljs-keyword">where</span>(&quot;o.status = ? and o.customer_id = ?&quot;, &quot;COMPLETE&quot;, <span class="hljs-number">1</span>)
+       .orderBy(&quot;o.id desc&quot;)
+       .<span class="hljs-keyword">execute</span>(jdbcTemplateMapper);       
        
 
 // hasOne relationship         
@@ -547,7 +560,15 @@ public <span class="hljs-keyword">class</span> EmployeeSkill {
                            .execute(jdbcTemplateMapper);
                        </code></pre><p>Note that the following methods are missing in QueryCount when compared to its corresponding paginated Query:</p>
 <p>populateProperty() - Not needed since we are just getting a count.<br>orderBy()          - Not needed because orderBy does not change the count of records returned.<br>limitOffsetClause  - Not needed since we want the total count not a subset.  </p>
-<h3 id="querying-multiple-relationships-with-a-single-query"><a class="header-link" href="#querying-multiple-relationships-with-a-single-query"></a>Querying multiple relationships with a single query</h3>
+<h3 id="dynamic-queries"><a class="header-link" href="#dynamic-queries"></a>Dynamic Queries</h3>
+<p>A simple dynamic query example given below:</p>
+<pre class="hljs"><code>IQueryFluent&lt;Person&gt; qry = (IQueryFluent&lt;Person&gt;) <span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Query</span>.</span></span><span class="hljs-keyword">type</span>(<span class="hljs-module-access"><span class="hljs-module"><span class="hljs-identifier">Person</span>.</span></span><span class="hljs-keyword">class</span>);
+
+qry.where(your<span class="hljs-constructor">DynamicWhereClause()</span>);
+qry.order<span class="hljs-constructor">By(<span class="hljs-params">yourDynamicOrderByClause</span>()</span>);
+qry.limit<span class="hljs-constructor">OffsetClause(<span class="hljs-params">yourDynamicLimitOffsetClause</span>()</span>);
+
+List&lt;Person&gt; persons = qry.execute(jtm); <span class="hljs-comment">// get the query results.</span></code></pre><h3 id="querying-multiple-relationships-with-a-single-query"><a class="header-link" href="#querying-multiple-relationships-with-a-single-query"></a>Querying multiple relationships with a single query</h3>
 <p>To query multiple relationships with a single query use SelectMapper with Spring ResultSetExtractor.<br>SelectMapper allows generating the select columns string for the models and population of the models from a ResultSet. </p>
 <p>An example for querying the following relationship: Order hasOne Customer, Order hasMany OrderLine, OrderLine hasOne Product  </p>
 <pre class="hljs"><code> <span class="hljs-comment">// The second argument to getSelectMapper() below is the table alias in the query and should match what is exactly used in query</span>
@@ -677,6 +698,14 @@ public <span class="hljs-keyword">class</span> EmployeeSkill {
 <p><a href="https://github.com/jdbctemplatemapper/jdbctemplatemapper/issues">Issues ticket</a>. </p>
 <p>When opening a ticket please provide the following:
 jdbcTemplateMapper version, Database name/version, jdbc driver version, version of java, version of Spring Boot</p>
+<h2 id="migration-to-3x-from-2x"><a class="header-link" href="#migration-to-3x-from-2x"></a>Migration to 3.x from 2.x</h2>
+<p>Version 3.x removes all the deprecated methods in 2.x versions.</p>
+<ol class="list">
+<li>Query.joinColumnOwningSide() removed - Use Query.joinColumnTypeSide()<br>QueryMerge.joinColumnOwningSide() removed - Use QueryMerge.joinColumnTypeSide()<br>QueryCount.joinColumnOwningSide() removed - Use QueryCount.joinColumnTypeSide()   </li>
+<li>JdbcTemplateMapper.getColumnsSql() removed - Use JdbcTemplateMapper.getBeanColumnsSql()</li>
+<li>JdbcTemplateMapper.findByProperty() removed - Use Query with where()</li>
+<li>JdbcTemplateMapper.useColumnLabelForResultSetMetaData() removed - No replacement method. Use jdbc 4.x drivers.</li>
+</ol>
       </div>
     </div>
   </div>
