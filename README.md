@@ -1,4 +1,4 @@
-# simple-crud-for-spring-jdbctemplate
+# jdbctemplate-crud-spring
 This is the code respository for the examples in the medium.com article titled [Simple CRUD for Spring JdbcTemplate](https://medium.com/@ajosephmi/simple-crud-for-spring-jdbctemplate-8347211d5306).
 
 Github project for the [JdbcTemplateMapper](https://github.com/jdbctemplatemapper/jdbctemplatemapper) library used in the examples.
